@@ -1,19 +1,16 @@
-# syntax=docker/dockerfile:experimental
-
 FROM golang:1.15.2 AS base
 WORKDIR /src
-RUN --mount=type=bind,target=.,rw \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go mod download
+COPY dependencies dependencies
+COPY go.mod go.sum ./
+RUN go mod download
 
 FROM base AS build
 ARG TARGETOS
 ARG TARGETARCH
 ARG IMG_RELEASE
 RUN mkdir -p /config/
-RUN --mount=type=bind,target=.,rw \
-    --mount=type=cache,target=/root/.cache/go-build \
-    IMG_VERSION=${IMG_RELEASE} \
+COPY . .
+RUN IMG_VERSION=${IMG_RELEASE} \
     GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     COMPILE_OUTPUT="/out/otelcol-custom-istio-awsxray" \
     make compile
